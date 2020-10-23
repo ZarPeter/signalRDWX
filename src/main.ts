@@ -3,8 +3,9 @@ import App from './App.vue'
 import './registerServiceWorker'
 import router from './router'
 import vuetify from './plugins/vuetify';
-import VueSignalR  from 'vue-signalr';
+import signalR from '@microsoft/signalr';
 Vue.config.productionTip = false
+
 
 new Vue({
   router,

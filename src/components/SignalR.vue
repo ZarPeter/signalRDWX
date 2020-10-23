@@ -36,11 +36,33 @@
 
 <script lang="ts">
   import Vue from 'vue'
+  import signalR from '@microsoft/signalr';
+const connection = new signalR.HubConnectionBuilder()
+    .withUrl("dwxros.service.signalr.net/")
+    .configureLogging(signalR.LogLevel.Information)
+    .build();
 
   export default Vue.extend({
     name: 'SignalR',
     data: () => ({
       messages: ["1","2"],
     }),
+    methods: {
+      async start() {
+        try {
+            await connection.start();
+            console.log("connected");
+        } catch (err) {
+            console.log(err);
+            // setTimeout(() => this.start(), 5000);
+        }
+      },
+      // connection.onclose(async () => {
+      //   await this.start();
+      // })
+    },
+    beforeMount() {
+        this.start();
+    }
   })
 </script>
