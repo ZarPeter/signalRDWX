@@ -16,8 +16,10 @@
         <p>Here be messages:</p>
         <div class="message-wrapper">
           <ul >
-            <li v-for="message in messages" :key="message">
+            <li v-for="(message, index) in messages" :key="index">
+              <span v-if="message != ''">
                {{ message }} 
+              </span>
             </li>
           </ul>
         </div>
@@ -26,7 +28,8 @@
     <v-row>
       <v-col>
         <div>
-          <v-input ><v-text-field label="Please enter a message"> </v-text-field></v-input>
+          <v-input ><v-text-field label="Please enter a message" v-model="enteredMessage"> </v-text-field></v-input>
+          <button v-on:click="sendMessage()"> Send </button>
         </div>
       </v-col>
     </v-row>
@@ -36,12 +39,15 @@
 
 <script lang="ts">
   import Vue from 'vue'
-  import { HubConnection, HubConnectionBuilder, LogLevel } from '@microsoft/signalr';
+  import axios from 'axios'
+  import { HttpClient, HubConnection, HubConnectionBuilder, HubConnectionState, LogLevel } from '@microsoft/signalr';
+  
 const connection = new HubConnectionBuilder()
     .withUrl('https://signalrrelaydwx.azurewebsites.net/api/')
+    // .withUrl('https://dwxros.service.signalr.net/chat')
     .configureLogging(LogLevel.Information)
     .build();
-const messagesLocal = [""];
+const messagesLocal: string[] = [];
 connection.on("newMessage", e => {
   console.log(e);
   const msg: string = e.message;
@@ -51,23 +57,38 @@ connection.on("newMessage", e => {
     name: 'SignalR',
     data: () => ({
       messages: messagesLocal,
+      enteredMessage: "",
     }),
     methods: {
       async start() {
         try {
-            await connection.start().then(()=> connection.invoke("messages", ""));
-            console.log("connected");
+            await connection.start().then(()=> {
+              if(connection.state == HubConnectionState.Connected) {
+                console.log("connected");
+              }
+              connection.invoke("send", "ff")
+            });
+
         } catch (err) {
             console.log(err);
-            // setTimeout(() => this.start(), 5000);
         }
       },
-      // connection.onclose(async () => {
-      //   await this.start();
-      // })
-    },
+      async sendMessage() {
+        try {
+          console.log("ee");
+          axios.post('https://signalrrelaydwx.azurewebsites.net/api/messages/', {message: this.enteredMessage})
+        } catch(err) {
+          console.log(err);
+        }
+      }
+     },
     beforeMount() {
+        connection.onclose(this.start);
+
         this.start();
+    },
+    beforeDestroy() {
+      connection.stop();
     }
   })
 </script>
