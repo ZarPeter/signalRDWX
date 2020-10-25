@@ -15,7 +15,7 @@
     "types": [
       "webpack-env",
       "vuetify",
-      "signalR"
+      "signalr"
     ],
     "paths": {
       "@/*": [
